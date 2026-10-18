@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Which Character Are You?</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #111018;
+  color: #f4efff;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.container { width: 100%; max-width: 680px; }
+.eyebrow {
+  color: #c3a8ff;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  font: 11px Arial, sans-serif;
+  text-align: center;
+}
+h1 {
+  font-size: clamp(34px, 7vw, 54px);
+  text-align: center;
+  font-weight: normal;
+  margin: 18px 0;
+}
+p { line-height: 1.7; color: #c7c1d4; }
+.intro { text-align: center; margin-bottom: 28px; }
+.panel {
+  background: #1b1925;
+  border: 1px solid #393247;
+  border-radius: 18px;
+  padding: 28px;
+}
+button {
+  cursor: pointer;
+  font: inherit;
+  transition: .2s;
+}
+.primary {
+  display: block;
+  margin: 28px auto 0;
+  border: 0;
+  border-radius: 30px;
+  background: #c3a8ff;
+  color: #17111f;
+  padding: 14px 30px;
+}
+.primary:hover { background: #ddceff; transform: translateY(-2px); }
+.topline {
+  display: flex;
+  justify-content: space-between;
+  color: #b7a5d8;
+  font: 12px Arial, sans-serif;
+}
+.track {
+  height: 4px;
+  background: #393247;
+  border-radius: 10px;
+  margin: 15px 0 28px;
+  overflow: hidden;
+}
+.progress {
+  height: 100%;
+  background: #c3a8ff;
+  width: 0%;
+  transition: width .3s;
+}
+h2 { font-weight: normal; font-size: 26px; line-height: 1.4; }
+.answers { display: grid; gap: 12px; margin-top: 24px; }
+.answer {
+  text-align: left;
+  color: #eee8fa;
+  background: #242130;
+  border: 1px solid #40384f;
+  border-radius: 12px;
+  padding: 17px;
+  line-height: 1.5;
+}
+.answer:hover, .answer.selected {
+  border-color: #c3a8ff;
+  background: #302741;
+}
+.result { text-align: center; }
+.symbol { font-size: 48px; margin: 15px 0; color: #c3a8ff; }
+.result h2 { font-size: 36px; }
+.hidden { display: none; }
+footer {
+  text-align: center;
+  color: #797286;
+  font: 11px Arial, sans-serif;
+  margin-top: 24px;
+}
+</style>
+</head>
+<body>
+<main class="container">
+  <div class="eyebrow">A personality quiz</div>
+  <h1 id="title">Which Character Are You?</h1>
+  <p class="intro" id="intro">
+    Every soul carries a different story. Discover the character
+    that reflects yours.
+  </p>
+
+  <section class="panel" id="start">
+    <p style="text-align:center">
+      Choose the answers that feel most like you. There are no
+      right or wrong answers — only different ways of seeing the world.
+    </p>
+    <button class="primary" onclick="begin()">Begin the quiz ↗</button>
+  </section>
+
+  <section class="panel hidden" id="quiz">
+    <div class="topline">
+      <span id="counter">QUESTION 1</span>
+      <span id="percent">0% COMPLETE</span>
+    </div>
+    <div class="track"><div class="progress" id="progress"></div></div>
+    <h2 id="question"></h2>
+    <div class="answers" id="answers"></div>
+  </section>
+
+  <section class="panel hidden result" id="result">
+    <div class="eyebrow">Your character is</div>
+    <div class="symbol" id="symbol">✧</div>
+    <h2 id="resultTitle"></h2>
+    <p id="description"></p>
+    <button class="primary" onclick="retake()">Take it again ↻</button>
+    <button class="primary" onclick="shareResult()" style="background:transparent;color:#c3a8ff;border:1px solid #55466e">
+      Share your result
+    </button>
+    <p id="shareMessage"></p>
+  </section>
+  <footer>A little journey into who you are.</footer>
+</main>
+
+<script>
+// CUSTOMIZE YOUR QUIZ BELOW!
+
+const types = {
+  protector: {
+    name: "The Protector",
+    symbol: "❧",
+    description: "You care deeply about the people around you. Even when things become difficult, you try to be someone others can rely on."
+  },
+  dreamer: {
+    name: "The Dreamer",
+    symbol: "✧",
+    description: "You see possibilities where others see limitations. Imagination, hope, and the things you believe in shape your world."
+  },
+  strategist: {
+    name: "The Strategist",
+    symbol: "◇",
+    description: "You observe carefully, think ahead, and search for meaning beneath the surface. You rarely act without considering your choices."
+  },
+  wanderer: {
+    name: "The Wanderer",
+    symbol: "☾",
+    description: "You value freedom and discovery. You are willing to step into the unknown to find something worth believing in."
+  }
+};
+
+const questions = [
+  {
+    question: "When a difficult situation arises, what do you do first?",
+    answers: [
+      { text: "Make sure everyone I care about is safe.", type: "protector" },
+      { text: "Imagine how things could turn out differently.", type: "dreamer" },
+      { text: "Analyze the situation before acting.", type: "strategist" },
+      { text: "Take a chance and find my own way through.", type: "wanderer" }
+    ]
+  },
+  {
+    question: "Which place feels most like home?",
+    answers: [
+      { text: "Somewhere surrounded by people I love.", type: "protector" },
+      { text: "A quiet place filled with books and possibilities.", type: "dreamer" },
+      { text: "Somewhere peaceful where I can think.", type: "strategist" },
+      { text: "Somewhere new, waiting to be explored.", type: "wanderer" }
+    ]
+  },
+  {
+    question: "What matters most to you?",
+    answers: [
+      { text: "Loyalty and keeping my promises.", type: "protector" },
+      { text: "Hope and the chance to change things.", type: "dreamer" },
+      { text: "Understanding the truth.", type: "strategist" },
+      { text: "Freedom to choose my own path.", type: "wanderer" }
+    ]
+  },
+  {
+    question: "How would your friends describe you?",
+    answers: [
+      { text: "Dependable, caring, and protective.", type: "protector" },
+      { text: "Imaginative, thoughtful, and idealistic.", type: "dreamer" },
+      { text: "Observant, composed, and analytical.", type: "strategist" },
+      { text: "Independent, curious, and adventurous.", type: "wanderer" }
+    ]
+  },
+  {
+    question: "If you could change one thing about the world, what would it be?",
+    answers: [
+      { text: "No one would have to face hardship alone.", type: "protector" },
+      { text: "Everyone could believe in a better future.", type: "dreamer" },
+      { text: "People would seek understanding before judging.", type: "strategist" },
+      { text: "Everyone would have the freedom to live their way.", type: "wanderer" }
+    ]
+  }
+];
+
+// QUIZ ENGINE — you usually don't need to change this part.
+
+let current = 0;
+let scores = {};
+let chosen = [];
+
+function begin() {
+  current = 0;
+  chosen = [];
+  scores = {};
+  Object.keys(types).forEach(type => scores[type] = 0);
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[current];
+  document.getElementById("counter").textContent =
+    `QUESTION ${current + 1} OF ${questions.length}`;
+  document.getElementById("percent").textContent =
+    `${Math.round(current / questions.length * 100)}% COMPLETE`;
+  document.getElementById("progress").style.width =
+    `${current / questions.length * 100}%`;
+  document.getElementById("question").textContent = q.question;
+
+  const answers = document.getElementById("answers");
+  answers.innerHTML = "";
+
+  q.answers.forEach((answer, index) => {
+    const button = document.createElement("button");
+    button.className = "answer";
+    button.textContent = `${String.fromCharCode(65 + index)}.  ${answer.text}`;
+    button.onclick = () => choose(answer, button);
+    answers.appendChild(button);
+  });
+}
+
+function choose(answer, button) {
+  document.querySelectorAll(".answer").forEach(b => b.disabled = true);
+  button.classList.add("selected");
+  scores[answer.type]++;
+  chosen.push(answer);
+
+  setTimeout(() => {
+    current++;
+    if (current < questions.length) {
+      showQuestion();
+    } else {
+      showResult();
+    }
+  }, 250);
+}
+
+function showResult() {
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+  document.getElementById("progress").style.width = "100%";
+
+  let winner = Object.keys(scores).sort((a, b) => scores[b] - scores[a])[0];
+  const result = types[winner];
+
+  document.getElementById("symbol").textContent = result.symbol;
+  document.getElementById("resultTitle").textContent = result.name;
+  document.getElementById("description").textContent = result.description;
+  document.getElementById("shareMessage").textContent = "";
+}
+
+function retake() {
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("start").classList.remove("hidden");
+}
+
+async function shareResult() {
+  const text = `I got ${document.getElementById("resultTitle").textContent} on ${document.getElementById("title").textContent}!`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: document.title, text, url: location.href });
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text + " " + location.href);
+      document.getElementById("shareMessage").textContent =
+        "Result copied! You can paste it into a message.";
+    } else {
+      document.getElementById("shareMessage").textContent =
+        text + " " + location.href;
+    }
+  } catch (error) {
+    // Sharing was cancelled or is unavailable.
+  }
+}
+</script>
+</body>
+</html>
